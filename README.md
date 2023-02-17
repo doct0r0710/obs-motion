@@ -13,7 +13,9 @@ Detects motion on OBS source and saves replay buffer using OBS Websockets.
 1. Change necessary OBS settings between lines 7 and 12.
 2. Start the project with `npm start` or `node index.js`
 3. Fine-tune settings between lines 13 and 15, if necessary. 
-- Increase `motionLimit` if too sensitive, decrease if not sensitive enough.
-- Increase `imageInterval` if performance is too slow, decrease to catch faster motion.
-- Increase `avgSize` if the scene is too noisy, decrease to catch smaller movement.
+    - Increase `motionLimit` if too sensitive, decrease if not sensitive enough.
+    - Increase `imageInterval` if performance is too slow, decrease to catch faster motion.
+    - Increase `avgSize` if the scene is too noisy, decrease to catch smaller movement.
 4. Disable `debug` on line 17 if necessary.
+
+Check out my [blog post](https://doctor0710.xyz/2023/02/17/obs-motion-detector/) for some examples and explanations of how it works.
