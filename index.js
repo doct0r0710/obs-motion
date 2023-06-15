@@ -25,6 +25,7 @@ const obs = new OBSWebSocket();
 
 async function connect() {
     try {
+        console.log(`Connecting to server ${('ws://' + wsAddress)}`);
         const {
             obsWebSocketVersion,
             negotiatedRpcVersion
@@ -32,40 +33,42 @@ async function connect() {
             rpcVersion: 1
         });
         console.log(`Connected to server ${obsWebSocketVersion} (using RPC ${negotiatedRpcVersion})`);
-        setInterval(() => {
-            if (!motionDetected) {
-                loadImg().then((img) => {
-                    const diff = processImg(img);
-                    if (diff !== undefined) {
-                        avgArr.unshift(diff);
-                        if (avgArr.length == avgSize) {
-                            avgArr.pop();
-                            const dev = stdev(avgArr);
-                            const current = Math.pow(diff - mean(avgArr), 2);
-                            const currentDev = Math.abs(current - dev);
-                            if (debug) {
-                                console.log(dev, current, currentDev);
-                            }
-                            if (currentDev > motionLimit) {
-                                console.log("Motion detected. Saving replay in " + saveAfter + " seconds. (Mag: " + currentDev + ")");
-                                motionDetected = true;
-                                setTimeout(async () => {
-                                    await obs.call('SaveReplayBuffer', {});
-                                    motionDetected = false;
-                                    avgArr = [];
-                                }, saveAfter * 1000);
-                            }
-                        } else {
-                            console.log("Accumulating averages");
-                        }
-                    }
-                }, (err) => {
-                    console.log(err);
-                });
-            }
-        }, imageInterval * 1000);
+        setInterval(detection, imageInterval * 1000);
     } catch (error) {
         console.error('Failed to connect', error.code, error.message);
+    }
+}
+
+async function detection() {
+    if (!motionDetected) {
+        loadImg().then((img) => {
+            const diff = processImg(img);
+            if (diff !== undefined) {
+                avgArr.push(diff);
+                if (avgArr.length == avgSize) {
+                    avgArr.shift();
+                    const dev = stdev(avgArr);
+                    const current = Math.pow(diff - mean(avgArr), 2);
+                    const currentDev = Math.abs(current - dev);
+                    if (debug) {
+                        console.log(dev, current, currentDev);
+                    }
+                    if (currentDev > motionLimit) {
+                        console.log("Motion detected. Saving replay in " + saveAfter + " seconds. (Mag: " + currentDev + ")");
+                        motionDetected = true;
+                        setTimeout(async () => {
+                            await obs.call('SaveReplayBuffer', {});
+                            motionDetected = false;
+                            avgArr = [];
+                        }, saveAfter * 1000);
+                    }
+                } else {
+                    console.log("Accumulating averages");
+                }
+            }
+        }, (err) => {
+            console.log(err);
+        });
     }
 }
 
@@ -103,8 +106,11 @@ function processImg(img) {
         }
     }
 
+    diff.delete();
+    prevImg.delete();
+
     prevImg = img;
-    return sum / (diff.rows * diff.cols);
+    return sum / (img.rows * img.cols);
 }
 
 function stdev(array) {

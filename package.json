@@ -9,7 +9,7 @@
   "author": "Doctor0710",
   "license": "ISC",
   "dependencies": {
-    "@techstark/opencv-js": "^4.6.0-release.1",
+    "@techstark/opencv-js": "^4.7.0-release.1",
     "jimp": "^0.22.4",
     "obs-websocket-js": "^5.0.2"
   }
